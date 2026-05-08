@@ -3,7 +3,7 @@
 > 매 작업 끝에 갱신. 다음 세션이 이 파일만 읽고 이어갈 수 있도록.
 
 ## 마지막 업데이트
-2026-05-08 — Phase 0 완료. main merge + tag 완료.
+2026-05-08 — Phase 0 완료, Phase 1 진입 합의.
 
 ## 현재 Phase
 **Phase 1**: 동작하는 골격 (시작 전)
@@ -23,9 +23,10 @@
 - main 브랜치 = phase-0-done tag ✅
 
 ## 다음 할 일 (우선순위 순)
-1. [ ] Phase 1 시작: 데이터 수집기 1개 소스 (NewsAPI 또는 RSS 결정 필요)
-2. [ ] 엔진 1 v0 (단순 버전, 흐름 그룹 매칭 제외)
-3. [ ] 피드 화면 v0
+1. [ ] Phase 1A-1: RSS 데이터 수집기 (새 채팅에서 시작)
+2. [ ] Phase 1A-2: 분류 (raw_data → events)
+3. [ ] Phase 1A-3: 묶기 (events → streams) — 엔진 1 v0
+4. [ ] Phase 1B: 피드 화면 v0 (1A 사용자 검증 통과 후)
 
 ## 참고: Tailwind v4 변경사항
 - `tailwind.config.ts` 없음 → `globals.css`의 `@theme inline {}` 블록으로 대체
@@ -33,7 +34,6 @@
 - 색상 접두사 예시: `bg-espresso`, `text-peony`, `bg-linen-warm`
 
 ## 막힌 곳 / 결정 미룬 항목
-- 데이터 소스 1순위 후보: NewsAPI? RSS? Phase 1 시작 시 결정.
 - 코사인 유사도 임계값: 실측 후 결정.
 - 자동 실행 엔진 모델 (Haiku vs Sonnet): Phase 1 실측 후 결정.
 
@@ -44,6 +44,27 @@
 4. `docs/SPEC.md` (필요 시)
 5. 작업 관련 코드
 
+## Phase 1 진입 합의 (Claude.ai 채팅에서 결정)
+
+- **진행 방식**: Phase 1A (수집 + 엔진 1) → 사용자 검증 → Phase 1B (화면 + 모바일) 로 분리. SPEC.md "7. 4주 작업 분해"의 Phase 1을 두 단계로 쪼갠 것.
+- **분리 이유**: 화면 만들기 전에 흐름 감지 품질을 raw 데이터로 검증. 예쁜 쓰레기 방지.
+- **데이터 소스 (RSS 4개)**:
+  - 연합뉴스 (ko, 종합)
+  - 한겨레 (ko, 시각 다양성)
+  - NYT (en, 글로벌 메이저)
+  - The Verge (en, 테크/문화 교차)
+- **트리거 방식**: Vercel Cron 대신 수동 API Route + 헤더 시크릿(`ENGINE_TRIGGER_SECRET`). 프롬프트 튜닝 단계라 즉시 재실행 가능해야 함. Cron은 Phase 1B 마지막에 추가.
+- **Phase 1A 끝 조건 (DoD)**:
+  1. raw_data에 4개 매체 24시간치 데이터 누적
+  2. events 테이블에 표면 사건 추출됨
+  3. streams 테이블에 흐름 카드 N개 생성 (N은 자연스럽게)
+  4. 사용자가 Supabase Studio에서 streams row 5개 정도 읽고 다음 셋 중 하나로 판단:
+     - "흐름이 보인다" → 1B 진입
+     - "프롬프트 갈면 더 좋겠다" → 1회 갈고 재실행
+     - "쓰레기다" → 멈추고 회고
+  5. 흐름 그룹 매칭 (stream_groups)은 빼고 단발 실행만. Phase 2에서 추가.
+- **1A 작업 분해**: 1A-1 (수집기) → 1A-2 (분류, raw_data → events) → 1A-3 (묶기, events → streams). 각 단계 사이에 사용자 검증 포인트.
+
 ## Phase별 진행률
 - Phase 0: ██████████ 100% ✅
 - Phase 1: ▱▱▱▱▱▱▱▱▱▱ 0%
@@ -53,6 +74,12 @@
 ---
 
 ## 변경 이력 (최신이 위)
+
+### 2026-05-08 (저녁)
+- Phase 0 완료 (10 테이블 + RLS + LLM 클라이언트 + 실호출 검증 통과)
+- main에 squash merge, phase-0-done 태그
+- Phase 1 분리 결정: 1A (수집+엔진) / 1B (화면)
+- RSS 4개 확정: 연합 / 한겨레 / NYT / The Verge
 
 ### 2026-05-08 (Phase 0 마감)
 - GET /api/test-llm 실 호출 검증 → 통과 → 라우트 삭제
