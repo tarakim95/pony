@@ -1,0 +1,1 @@
+-- All indexes are defined in 0002 and 0003. This file is intentionally empty to preserve migration ordering.

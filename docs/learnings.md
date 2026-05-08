@@ -13,6 +13,22 @@
 
 ---
 
+### 2026-05-08 · 단위 테스트 mock 통과를 동작 검증으로 착각
+**무엇이 잘못됐나**: callLLM 단위 테스트(mock) 통과 후 Phase 0 마감하려 했음. 실제 호출 경로(server-only + Next.js 런타임)를 한 번도 굴리지 않은 상태였음.
+**왜 그랬나**: tsx 스크립트로 우회 검증하면서 "동일한 로직"이라고 합리화. mock 테스트와 실호출 테스트는 검증 범위가 완전히 다름. tsx 스크립트는 server-only + next/headers 체인을 아예 우회하므로 Next.js 런타임 경로를 검증하지 못함.
+**다음에 어떻게 막을지**: Phase 마감 체크리스트에 "실제 호출 경로 한 번 굴렸는가" 항목 명시. 우회 검증(tsx 스크립트, 직접 SDK 호출 등)은 검증으로 치지 않음. server-only 모듈은 반드시 Next.js dev 서버 or 빌드 결과물로 검증.
+**관련**: `src/lib/llm/client.ts`, `scripts/test-llm.ts` (삭제됨), `src/app/api/test-llm/route.ts` (삭제됨)
+
+---
+
+### 2026-05-08 · 마이그레이션 인덱스를 별도 파일로 분리했다가 중복 충돌
+**무엇이 잘못됐나**: 0002/0003에 인덱스를 포함했어야 하는데 0004_indexes.sql을 별도로 만들어 인덱스가 이중 정의됨.
+**왜 그랬나**: 파일 분리 설계 시 "인덱스는 별도 파일" 일반론을 따랐으나, `CREATE TABLE` 직후 `CREATE INDEX`를 두는 것이 PostgreSQL 관행이고 유지보수도 쉬움.
+**다음에 어떻게 막을지**: SPEC.md 3-2에 명시한 규칙 따르기 — 인덱스는 해당 테이블 정의 파일에 함께. 인덱스 전용 파일 신규 생성 금지.
+**관련**: `supabase/migrations/20260508000004_indexes.sql`, `0002_shared_tables.sql`, `0003_user_tables.sql`
+
+---
+
 ### 2026-05-08 · .env가 git tracked 상태로 새 키 노출 직전
 **무엇이 잘못됐나**: nasdaq_briefing/.env가 .gitignore에 있음에도 이미 tracked 상태라 무시되지 않았음. 새 키를 .env에 넣었다면 다음 commit에서 노출.
 **왜 그랬나**: .gitignore는 이미 tracked된 파일에는 적용 안 됨. 과거에 .env가 tracked되어 commit된 적이 있었음.

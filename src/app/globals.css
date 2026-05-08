@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+:root {
+  /* Pony 색상 팔레트 */
+  --espresso:       #3E2723;
+  --espresso-soft:  #5C3F38;
+  --peony:          #F4C9D6;
+  --peony-deep:     #E8A8BA;
+  --linen:          #F5F1E6;
+  --linen-warm:     #EDE6D4;
+  --cream:          #FAF7EE;
+
+  /* 시멘틱 매핑 */
+  --background: var(--linen);
+  --foreground: var(--espresso);
+  --surface: var(--linen-warm);
+  --surface-raised: var(--cream);
+  --accent: var(--peony);
+  --accent-strong: var(--peony-deep);
+  --text-primary: var(--espresso);
+  --text-secondary: var(--espresso-soft);
+}
+
+@theme inline {
+  /* Pony 색상 → Tailwind 유틸리티 클래스 */
+  --color-espresso:      var(--espresso);
+  --color-espresso-soft: var(--espresso-soft);
+  --color-peony:         var(--peony);
+  --color-peony-deep:    var(--peony-deep);
+  --color-linen:         var(--linen);
+  --color-linen-warm:    var(--linen-warm);
+  --color-cream:         var(--cream);
+
+  /* 시멘틱 */
+  --color-background:    var(--background);
+  --color-foreground:    var(--foreground);
+  --color-surface:       var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-accent:        var(--accent);
+  --color-accent-strong: var(--accent-strong);
+
+  /* 폰트 */
+  --font-sans: 'Pretendard', system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

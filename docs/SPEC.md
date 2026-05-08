@@ -217,7 +217,11 @@ estimated_cost  numeric(10,6)       -- USD
 purpose         text                -- 'engine1' | 'engine2' | 'embedding'
 ```
 
-### 3-2. RLS (Row Level Security)
+### 3-2. 마이그레이션 규칙
+
+- 테이블에 종속된 인덱스는 해당 테이블 정의 파일에 함께 둔다. 별도 인덱스 전용 마이그레이션 파일을 만들지 않는다.
+
+### 3-3. RLS (Row Level Security)
 - 모든 사용자 데이터 테이블에 RLS 활성화
 - `user_id = auth.uid()` 정책
 - `events`, `raw_data`는 공유 가능 (분리하면 비용 절감)
@@ -311,10 +315,12 @@ purpose         text                -- 'engine1' | 'engine2' | 'embedding'
 
 ### Phase 0 (반나절): 골격
 - [x] 기획 문서 작성
-- [ ] 프로젝트 초기화 (Next.js + Tailwind + Supabase)
-- [ ] `.env.example`, `.gitignore`, `CLAUDE.md`, `progress.md` 배치
-- [ ] DB 스키마 마이그레이션 1차
-- [ ] Supabase 연결 확인 (간단한 read 테스트)
+- [x] 프로젝트 초기화 (Next.js + Tailwind + Supabase)
+- [x] `.env.example`, `.gitignore`, `CLAUDE.md`, `progress.md` 배치
+- [x] DB 스키마 마이그레이션 1차
+- [x] Supabase 연결 확인 (간단한 read 테스트)
+- [x] LLM 클라이언트 골격 (callLLM + 한도 + 비용 추적)
+- [x] 실제 호출 경로 검증 (GET /api/test-llm → Haiku 4.5 → llm_call_log)
 
 ### Phase 1 (Week 1): 동작하는 골격
 - [ ] 데이터 수집 1개 소스 (NewsAPI 또는 RSS)
