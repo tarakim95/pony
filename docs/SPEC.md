@@ -201,10 +201,21 @@ user_id         uuid FK
 ```sql
 id              uuid PK
 collected_at    timestamptz
-source          text                -- 'newsapi' | 'rss:nytimes' | ...
+source_type     text                -- 프로토콜: 'rss' | 'api' | 'sns' | 'search'
+source_id       text                -- 출처 약칭: 'nyt', 'hani', 'yonhap', 'theverge' 등
+source_detail   text                -- 세부 경로 (RSS 섹션 등). nullable
+external_id     text                -- 매체 측 고유 ID. nullable → dedup 키
 content         jsonb               -- 원본 그대로
-processed       boolean             -- 엔진 1이 처리했는지
+processed       boolean             -- 엔진 1이 처리했는지 (default false)
+processed_at    timestamptz         -- 처리 완료 시각. nullable
 ```
+
+dedup: `(source_type, source_id, external_id)` UNIQUE INDEX (external_id IS NOT NULL 조건부)
+
+`external_id` 추출 우선순위:
+1. RSS `<guid>`
+2. RSS `<link>`
+3. `sha256(title + pubDate)` — 16자리 prefix
 
 #### `llm_call_log` (비용 추적)
 ```sql
@@ -217,11 +228,31 @@ estimated_cost  numeric(10,6)       -- USD
 purpose         text                -- 'engine1' | 'engine2' | 'embedding'
 ```
 
-### 3-2. 마이그레이션 규칙
+### 3-2. source 명명 규칙
+
+#### `source_type` 허용값
+| 값 | 설명 |
+|---|---|
+| `rss` | RSS/Atom 피드 |
+| `api` | REST API (NewsAPI 등) |
+| `sns` | 소셜 미디어 |
+| `search` | 검색 트렌드 (Google Trends 등) |
+
+#### `source_id` 명명 규칙
+- 영문 소문자 + 숫자 + 언더스코어만 (`[a-z0-9_]+`)
+- 매체 공식 약칭 우선 (관행 따름)
+- Phase 1A 사용 목록: `yonhap`, `hani`, `nyt`, `theverge`
+
+#### `external_id` 추출 우선순위
+1. RSS `<guid>`
+2. RSS `<link>`
+3. `sha256(title + pubDate)` — 16자리 hex prefix
+
+### 3-3. 마이그레이션 규칙
 
 - 테이블에 종속된 인덱스는 해당 테이블 정의 파일에 함께 둔다. 별도 인덱스 전용 마이그레이션 파일을 만들지 않는다.
 
-### 3-3. RLS (Row Level Security)
+### 3-4. RLS (Row Level Security)
 - 모든 사용자 데이터 테이블에 RLS 활성화
 - `user_id = auth.uid()` 정책
 - `events`, `raw_data`는 공유 가능 (분리하면 비용 절감)
